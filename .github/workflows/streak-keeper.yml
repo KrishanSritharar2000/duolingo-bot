@@ -2,19 +2,29 @@ name: Keep my Duolingo streak
 
 on:
   schedule:
-    - cron: '10 21 * * *'
+    - cron: '0 9 * * *'  # Schedule the workflow to run once every day at 8:00 AM UTC
 
 jobs:
-  study:
+  schedule:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Generate random delay
+        id: random-delay
+        run: echo "::set-output name=delay::$(shuf -i 0-600 -n 1)"  # Generates a random delay between 0 and 600 seconds (10 minutes)
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - name: Wait for random delay
+        run: sleep ${{ steps.random-delay.outputs.delay }}  # Waits for the random delay before proceeding
 
-      - run: node index.js
-        env:
-          DUOLINGO_JWT: ${{ secrets.DUOLINGO_JWT }}
-          LESSONS: 1
+      - name: Main job
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+
+          - uses: actions/setup-node@v4
+            with:
+              node-version: 20
+
+          - run: node index.js
+            env:
+              DUOLINGO_JWT: ${{ secrets.DUOLINGO_JWT }}
+              LESSONS: 1
