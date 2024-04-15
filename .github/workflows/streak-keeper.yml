@@ -2,32 +2,39 @@ name: Keep my Duolingo streak
 
 on:
   schedule:
-    - cron: '0 8 * * *'  # Schedule the workflow to run once every day at 8:00 AM UTC
+    - cron: '0 9 * * *'  # Schedule the workflow to run once every day at 8:00 AM UTC
 
 jobs:
-  schedule:
+  generate-random-delay:
     runs-on: ubuntu-latest
+    outputs:
+      delay: ${{ steps.set-delay.outputs.delay }}
     steps:
       - name: Generate random delay
-        id: random-delay
+        id: set-delay
         run: echo "::set-output name=delay::$(shuf -i 0-600 -n 1)"  # Generates a random delay between 0 and 600 seconds (10 minutes)
-      
+  
+  wait-random-delay:
+    runs-on: ubuntu-latest
+    needs: generate-random-delay
+    steps:
       - name: Wait for random delay
-        run: sleep ${{ steps.random-delay.outputs.delay }}  # Waits for the random delay before proceeding
-      
-      - name: Main job
-        runs-on: ubuntu-latest
-        steps:
-          - name: Checkout code
-            uses: actions/checkout@v4
+        run: sleep ${{ needs.generate-random-delay.outputs.delay }}  # Waits for the random delay before proceeding
 
-          - name: Setup Node.js
-            uses: actions/setup-node@v4
-            with:
-              node-version: 20
+  main-job:
+    runs-on: ubuntu-latest
+    needs: wait-random-delay
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-          - name: Run Node.js script
-            run: node index.js
-            env:
-              DUOLINGO_JWT: ${{ secrets.DUOLINGO_JWT }}
-              LESSONS: 1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run Node.js script
+        run: node index.js
+        env:
+          DUOLINGO_JWT: ${{ secrets.DUOLINGO_JWT }}
+          LESSONS: 1
