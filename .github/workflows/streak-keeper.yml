@@ -6,6 +6,7 @@ on:
 
 jobs:
   schedule:
+    name: Keep my Duolingo streak job
     runs-on: ubuntu-latest
     steps:
       - name: Generate random delay
